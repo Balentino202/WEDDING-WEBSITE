@@ -1,0 +1,52 @@
+.petals {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.petal {
+  position: absolute;
+  top: -6%;
+  width: 16px;
+  height: 16px;
+  background: radial-gradient(circle at 30% 30%, var(--gold-soft), var(--gold));
+  /* Petal shape via asymmetric border-radius */
+  border-radius: 80% 0 80% 0;
+  opacity: 0.55;
+  animation-name: petalFall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform, top;
+}
+
+@keyframes petalFall {
+  0% {
+    top: -6%;
+    opacity: 0;
+    rotate: 0deg;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  50% {
+    margin-left: 40px;
+    rotate: 180deg;
+  }
+  90% {
+    opacity: 0.5;
+  }
+  100% {
+    top: 106%;
+    margin-left: -30px;
+    rotate: 360deg;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .petals {
+    display: none;
+  }
+}

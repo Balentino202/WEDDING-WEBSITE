@@ -1,0 +1,230 @@
+import { useState, type FormEvent } from 'react'
+import { couple, rsvpEndpoint } from '../data/wedding'
+import './RSVP.css'
+
+interface FormState {
+  name: string
+  email: string
+  attending: 'yes' | 'no' | ''
+  guests: string
+  events: string[]
+  message: string
+}
+
+const initial: FormState = {
+  name: '',
+  email: '',
+  attending: '',
+  guests: '1',
+  events: [],
+  message: '',
+}
+
+const eventOptions = ['Traditional Ceremony', 'White Wedding', 'Reception']
+
+export default function RSVP() {
+  const [form, setForm] = useState<FormState>(initial)
+  const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({})
+  const [submitted, setSubmitted] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [sendError, setSendError] = useState('')
+
+  const update = <K extends keyof FormState>(key: K, value: FormState[K]) =>
+    setForm((f) => ({ ...f, [key]: value }))
+
+  const toggleEvent = (ev: string) =>
+    setForm((f) => ({
+      ...f,
+      events: f.events.includes(ev) ? f.events.filter((e) => e !== ev) : [...f.events, ev],
+    }))
+
+  const validate = (): boolean => {
+    const next: Partial<Record<keyof FormState, string>> = {}
+    if (!form.name.trim()) next.name = 'Please tell us your name.'
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) next.email = 'A valid email is required.'
+    if (!form.attending) next.attending = 'Please let us know if you can make it.'
+    setErrors(next)
+    return Object.keys(next).length === 0
+  }
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!validate()) return
+
+    const payload = {
+      ...form,
+      events: form.events.join(', '),
+      submittedAt: new Date().toISOString(),
+      _subject: `Wedding RSVP — ${form.name}`,
+    }
+
+    // Always keep a local copy so nothing is ever lost.
+    try {
+      const key = 'wedding-rsvps'
+      const existing = JSON.parse(window.localStorage.getItem(key) || '[]')
+      existing.push(payload)
+      window.localStorage.setItem(key, JSON.stringify(existing))
+    } catch {
+      /* ignore storage errors */
+    }
+
+    // If a Formspree endpoint is configured, send it there too.
+    if (rsvpEndpoint) {
+      setSending(true)
+      setSendError('')
+      try {
+        const res = await fetch(rsvpEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        if (!res.ok) throw new Error('Request failed')
+      } catch {
+        setSending(false)
+        setSendError(
+          'We couldn’t reach the server, but your response was saved. Please try again later.',
+        )
+        return
+      }
+      setSending(false)
+    }
+
+    setSubmitted(true)
+  }
+
+  if (submitted) {
+    return (
+      <section id="rsvp" className="section section--tint">
+        <div className="container rsvp__thanks reveal">
+          <div className="rsvp__thanks-icon">💌</div>
+          <h2>Thank You, {form.name.split(' ')[0]}!</h2>
+          <p>
+            {form.attending === 'yes'
+              ? `We're overjoyed that you'll be celebrating with us. See you in July!`
+              : `We'll miss you, but thank you for letting us know. You'll be in our hearts.`}
+          </p>
+          <p className="rsvp__hashtag">{couple.hashtag}</p>
+          <button
+            className="btn btn--ghost"
+            onClick={() => {
+              setForm(initial)
+              setSubmitted(false)
+            }}
+          >
+            Submit Another Response
+          </button>
+        </div>
+      </section>
+    )
+  }
+
+  return (
+    <section id="rsvp" className="section section--tint">
+      <div className="container">
+        <div className="section-head reveal">
+          <span className="script">Will You Join Us?</span>
+          <h2>RSVP</h2>
+          <p className="sub">Kindly respond before June 30th, 2026 so we can plan accordingly.</p>
+          <div className="divider">
+            <span>❦</span>
+          </div>
+        </div>
+
+        <form className="rsvp__form reveal" onSubmit={handleSubmit} noValidate>
+          <div className="rsvp__field">
+            <label htmlFor="name">Full Name *</label>
+            <input
+              id="name"
+              type="text"
+              value={form.name}
+              onChange={(e) => update('name', e.target.value)}
+              className={errors.name ? 'has-error' : ''}
+              placeholder="Your name"
+            />
+            {errors.name && <span className="rsvp__error">{errors.name}</span>}
+          </div>
+
+          <div className="rsvp__field">
+            <label htmlFor="email">Email *</label>
+            <input
+              id="email"
+              type="email"
+              value={form.email}
+              onChange={(e) => update('email', e.target.value)}
+              className={errors.email ? 'has-error' : ''}
+              placeholder="you@example.com"
+            />
+            {errors.email && <span className="rsvp__error">{errors.email}</span>}
+          </div>
+
+          <div className="rsvp__field">
+            <span className="rsvp__legend">Will you attend? *</span>
+            <div className="rsvp__choices">
+              {(['yes', 'no'] as const).map((opt) => (
+                <label key={opt} className={`rsvp__choice${form.attending === opt ? ' is-selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="attending"
+                    value={opt}
+                    checked={form.attending === opt}
+                    onChange={() => update('attending', opt)}
+                  />
+                  {opt === 'yes' ? "Joyfully accepts 🎉" : 'Regretfully declines'}
+                </label>
+              ))}
+            </div>
+            {errors.attending && <span className="rsvp__error">{errors.attending}</span>}
+          </div>
+
+          {form.attending === 'yes' && (
+            <>
+              <div className="rsvp__field">
+                <label htmlFor="guests">Number of Guests (including you)</label>
+                <select id="guests" value={form.guests} onChange={(e) => update('guests', e.target.value)}>
+                  {['1', '2', '3', '4', '5+'].map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="rsvp__field">
+                <span className="rsvp__legend">Which events will you attend?</span>
+                <div className="rsvp__checks">
+                  {eventOptions.map((ev) => (
+                    <label key={ev} className={`rsvp__check${form.events.includes(ev) ? ' is-selected' : ''}`}>
+                      <input
+                        type="checkbox"
+                        checked={form.events.includes(ev)}
+                        onChange={() => toggleEvent(ev)}
+                      />
+                      {ev}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          <div className="rsvp__field">
+            <label htmlFor="message">A Message for the Couple</label>
+            <textarea
+              id="message"
+              rows={4}
+              value={form.message}
+              onChange={(e) => update('message', e.target.value)}
+              placeholder="Share your wishes, prayers or blessings…"
+            />
+          </div>
+
+          {sendError && <p className="rsvp__senderror">{sendError}</p>}
+
+          <button type="submit" className="btn rsvp__submit" disabled={sending}>
+            {sending ? 'Sending…' : 'Send RSVP'}
+          </button>
+        </form>
+      </div>
+    </section>
+  )
+}
