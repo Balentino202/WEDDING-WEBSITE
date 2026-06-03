@@ -33,7 +33,7 @@ export default function Faq() {
           {faqs.map((item, i) => {
             const isOpen = open === i
             return (
-              <div className={`faq__item reveal${isOpen ? ' is-open' : ''}`} key={i}>
+              <div className={`faq__item${isOpen ? ' is-open' : ''}`} key={i}>
                 <button
                   className="faq__q"
                   aria-expanded={isOpen}

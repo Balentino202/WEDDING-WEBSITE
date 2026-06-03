@@ -8,7 +8,7 @@ function stamp(localISO: string): string {
 function describe(ev: WeddingEvent): { title: string; details: string; location: string } {
   return {
     title: `Purity & Isaiah Wedding — ${ev.name}`,
-    details: `Join us to celebrate the wedding of Purity & Isaiah. ${ev.name} at ${ev.venue}. #SongsOfSong2026`,
+    details: `Join us to celebrate the wedding of Purity & Isaiah. ${ev.name} at ${ev.venue}. #SongOfSongs2026`,
     location: `${ev.venue}, ${ev.address}`,
   }
 }

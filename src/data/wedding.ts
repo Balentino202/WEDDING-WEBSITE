@@ -8,8 +8,8 @@ export const couple = {
   groomFirstName: 'Isaiah',
   brideFullName: 'Purity Chidimma',
   groomFullName: 'Isaiah Adejor',
-  hashtag: '#SongsOfSong2026',
-  tagline: 'Songs of Song 2026',
+  hashtag: '#SongOfSongs2026',
+  tagline: 'Song of Songs 2026',
   // The white-wedding day is used for the headline date + countdown.
   // Format: YYYY-MM-DDTHH:mm:ss (local time)
   weddingDateISO: '2026-08-08T09:00:00',
@@ -297,7 +297,7 @@ export const faqs: Faq[] = [
   },
   {
     q: 'Can I take photos?',
-    a: 'Absolutely — we would love that! We kindly ask that you keep aisles clear during the ceremony so our photographers can capture every moment. Share yours with #SongsOfSong2026.',
+    a: 'Absolutely — we would love that! We kindly ask that you keep aisles clear during the ceremony so our photographers can capture every moment. Share yours with #SongOfSongs2026.',
   },
   {
     q: 'What about gifts?',

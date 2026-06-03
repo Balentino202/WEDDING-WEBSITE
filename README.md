@@ -1,4 +1,4 @@
-# Purity & Isaiah — Songs of Song 2026 💍
+# Purity & Isaiah — Song of Songs 2026 💍
 
 An elegant, fully responsive wedding website built with **Yarn + Vite + React + TypeScript**.
 It reimagines the original announcement site as a richer, animated single-page experience.

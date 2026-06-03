@@ -22,7 +22,7 @@ export default function WeddingDetails() {
         <div className="events__grid">
           {weddingEvents.map((ev, i) => (
             <article
-              className={`event reveal${i === activeMap ? ' event--active' : ''}`}
+              className={`event${i === activeMap ? ' event--active' : ''}`}
               key={ev.name}
               onClick={() => setActiveMap(i)}
             >
