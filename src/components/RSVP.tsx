@@ -2,10 +2,12 @@ import { useState, type FormEvent } from 'react'
 import { couple, rsvpEndpoint } from '../data/wedding'
 import './RSVP.css'
 
+type Attendance = 'pending' | 'yes' | 'no' | 'maybe'
+
 interface FormState {
   name: string
   email: string
-  attending: 'yes' | 'no' | ''
+  attending: Attendance
   guests: string
   events: string[]
   message: string
@@ -14,11 +16,18 @@ interface FormState {
 const initial: FormState = {
   name: '',
   email: '',
-  attending: '',
+  attending: 'pending',
   guests: '1',
   events: [],
   message: '',
 }
+
+const attendanceOptions: { value: Attendance; label: string }[] = [
+  { value: 'pending', label: 'Pending' },
+  { value: 'yes', label: 'Yes' },
+  { value: 'no', label: 'No' },
+  { value: 'maybe', label: 'Maybe' },
+]
 
 const eventOptions = ['Traditional Ceremony', 'White Wedding', 'Reception']
 
@@ -42,7 +51,6 @@ export default function RSVP() {
     const next: Partial<Record<keyof FormState, string>> = {}
     if (!form.name.trim()) next.name = 'Please tell us your name.'
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) next.email = 'A valid email is required.'
-    if (!form.attending) next.attending = 'Please let us know if you can make it.'
     setErrors(next)
     return Object.keys(next).length === 0
   }
@@ -100,8 +108,12 @@ export default function RSVP() {
           <h2>Thank You, {form.name.split(' ')[0]}!</h2>
           <p>
             {form.attending === 'yes'
-              ? `We're overjoyed that you'll be celebrating with us. See you in July!`
-              : `We'll miss you, but thank you for letting us know. You'll be in our hearts.`}
+              ? `We're overjoyed that you'll be celebrating with us. See you in August!`
+              : form.attending === 'maybe'
+                ? `We hope you'll be able to make it! Thank you for letting us know.`
+                : form.attending === 'no'
+                  ? `We'll miss you, but thank you for letting us know. You'll be in our hearts.`
+                  : `Thank you for your response. We hope to celebrate with you in August!`}
           </p>
           <p className="rsvp__hashtag">{couple.hashtag}</p>
           <button
@@ -158,25 +170,21 @@ export default function RSVP() {
           </div>
 
           <div className="rsvp__field">
-            <span className="rsvp__legend">Will you attend? *</span>
-            <div className="rsvp__choices">
-              {(['yes', 'no'] as const).map((opt) => (
-                <label key={opt} className={`rsvp__choice${form.attending === opt ? ' is-selected' : ''}`}>
-                  <input
-                    type="radio"
-                    name="attending"
-                    value={opt}
-                    checked={form.attending === opt}
-                    onChange={() => update('attending', opt)}
-                  />
-                  {opt === 'yes' ? "Joyfully accepts 🎉" : 'Regretfully declines'}
-                </label>
+            <label htmlFor="attending">Will you attend?</label>
+            <select
+              id="attending"
+              value={form.attending}
+              onChange={(e) => update('attending', e.target.value as Attendance)}
+            >
+              {attendanceOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
               ))}
-            </div>
-            {errors.attending && <span className="rsvp__error">{errors.attending}</span>}
+            </select>
           </div>
 
-          {form.attending === 'yes' && (
+          {(form.attending === 'yes' || form.attending === 'maybe') && (
             <>
               <div className="rsvp__field">
                 <label htmlFor="guests">Number of Guests (including you)</label>
