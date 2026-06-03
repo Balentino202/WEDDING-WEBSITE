@@ -70,7 +70,7 @@ export default function Gallery() {
         <div className="gallery__grid">
           {visible.map((img, i) => (
             <button
-              className="gallery__item reveal"
+              className="gallery__item"
               key={img.src}
               onClick={() => setLightbox(i)}
               aria-label={`Open ${img.alt}`}

@@ -30,7 +30,10 @@ export default function Gifts() {
         <div className="gifts__grid">
           {gifts.accounts.map((acc) => (
             <article className="gift-card reveal" key={acc.accountNumber}>
-              <div className="gift-card__bank">{acc.bank}</div>
+              <div className="gift-card__bank">
+                {acc.bank}
+                {acc.currency && <span className="gift-card__currency">{acc.currency}</span>}
+              </div>
               <div className="gift-card__row">
                 <span className="gift-card__label">Account Name</span>
                 <span className="gift-card__value">{acc.accountName}</span>
@@ -39,6 +42,18 @@ export default function Gifts() {
                 <span className="gift-card__label">Account Number</span>
                 <span className="gift-card__value gift-card__number">{acc.accountNumber}</span>
               </div>
+              {acc.swiftCode && (
+                <div className="gift-card__row">
+                  <span className="gift-card__label">Swift Code</span>
+                  <span className="gift-card__value">{acc.swiftCode}</span>
+                </div>
+              )}
+              {acc.sortCode && (
+                <div className="gift-card__row">
+                  <span className="gift-card__label">Sort Code</span>
+                  <span className="gift-card__value">{acc.sortCode}</span>
+                </div>
+              )}
               <button className="btn btn--ghost gift-card__copy" onClick={() => copy(acc.accountNumber)}>
                 {copied === acc.accountNumber ? '✓ Copied' : 'Copy Number'}
               </button>

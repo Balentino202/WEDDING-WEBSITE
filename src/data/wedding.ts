@@ -12,8 +12,8 @@ export const couple = {
   tagline: 'Songs of Song 2026',
   // The white-wedding day is used for the headline date + countdown.
   // Format: YYYY-MM-DDTHH:mm:ss (local time)
-  weddingDateISO: '2026-07-08T09:00:00',
-  weddingDateLabel: 'July 8, 2026',
+  weddingDateISO: '2026-08-08T09:00:00',
+  weddingDateLabel: 'August 8, 2026',
   location: 'Nnewi, Anambra State · Nigeria',
 }
 
@@ -55,7 +55,7 @@ export const storyTimeline: TimelineEvent[] = [
     text: 'A promise was made — to walk together, in love and in Christ, for the rest of our days.',
   },
   {
-    year: 'July 2026',
+    year: 'August 2026',
     title: 'Forever Begins',
     text: 'We say "I do" and begin a Kingdom-driven marriage built on the Word of God.',
   },
@@ -102,7 +102,7 @@ export const groom: Person = {
   role: 'The Groom',
   state: 'Kogi State, Nigeria',
   dob: 'May 5th',
-  education: 'B.Eng. Computer Engineering — Nnamdi Azikiwe University',
+  education: 'B.Eng. Computer & Electronics Engineering — Nnamdi Azikiwe University, Awka',
   roles: [
     'Lead Pastor — House of Delight International Church',
     'Cloud Engineer — Maizehost',
@@ -165,33 +165,33 @@ export interface WeddingEvent {
 export const weddingEvents: WeddingEvent[] = [
   {
     name: 'Traditional Ceremony',
-    date: 'July 10, 2026',
+    date: 'August 6, 2026',
     time: '10:00 AM',
     venue: "Bride's Family Home",
     address: 'Iruabor, Nkwelle Awkuzu, Anambra State',
     mapQuery: 'Nkwelle Awkuzu, Anambra, Nigeria',
-    startISO: '2026-07-10T10:00:00',
-    endISO: '2026-07-10T14:00:00',
+    startISO: '2026-08-06T10:00:00',
+    endISO: '2026-08-06T14:00:00',
   },
   {
     name: 'White Wedding',
-    date: 'July 11, 2026',
+    date: 'August 8, 2026',
     time: '9:00 AM',
     venue: 'Revival Hub International HQ',
     address: 'Nnewi, Anambra State',
     mapQuery: 'Nnewi, Anambra, Nigeria',
-    startISO: '2026-07-11T09:00:00',
-    endISO: '2026-07-11T12:00:00',
+    startISO: '2026-08-08T09:00:00',
+    endISO: '2026-08-08T12:00:00',
   },
   {
     name: 'Reception',
-    date: 'July 11, 2026',
-    time: '1:00 PM',
-    venue: 'Revival Hub Main Hall',
-    address: 'Nnewi, Anambra State',
+    date: 'August 8, 2026',
+    time: 'Follows immediately',
+    venue: 'Revival Hub International HQ',
+    address: 'Same venue, immediately after the wedding · Nnewi, Anambra State',
     mapQuery: 'Nnewi, Anambra, Nigeria',
-    startISO: '2026-07-11T13:00:00',
-    endISO: '2026-07-11T18:00:00',
+    startISO: '2026-08-08T12:00:00',
+    endISO: '2026-08-08T17:00:00',
   },
 ]
 
@@ -202,8 +202,8 @@ export interface ProgramItem {
 }
 
 export const program: ProgramItem[] = [
-  { time: '9:00 AM', title: 'Guest Arrival', icon: '🚪' },
-  { time: '10:00 AM', title: 'Wedding Ceremony', icon: '💍' },
+  { time: '8:00 AM', title: 'Guest Arrival', icon: '🚪' },
+  { time: '9:00 AM', title: 'Wedding Ceremony', icon: '💍' },
   { time: '1:00 PM', title: 'Reception', icon: '🍽' },
   { time: '4:00 PM', title: 'Celebration & Dancing', icon: '🎉' },
 ]
@@ -212,6 +212,9 @@ export interface BankAccount {
   bank: string
   accountName: string
   accountNumber: string
+  currency?: string
+  swiftCode?: string
+  sortCode?: string
 }
 
 export const gifts = {
@@ -227,6 +230,14 @@ export const gifts = {
       bank: 'GTBank',
       accountName: 'Adejor Isaiah',
       accountNumber: '0112160189',
+    },
+    {
+      bank: 'Ecobank',
+      accountName: 'Adejor Isaiah',
+      accountNumber: '5070021464',
+      currency: 'Dollar (USD) Account',
+      swiftCode: 'ECOCNGLA',
+      sortCode: '04087350',
     },
   ] as BankAccount[],
   phone: '07049982267',
@@ -270,7 +281,7 @@ export const faqs: Faq[] = [
   },
   {
     q: 'What are the colours of the day (Aso-Ebi)?',
-    a: 'Our colours are Champagne Gold, Ivory and Burgundy. Feel free to incorporate them into your outfit.',
+    a: 'Our colours are Burnt Orange, Chocolate Brown, Beige and Wine. Feel free to incorporate them into your outfit.',
   },
   {
     q: 'Can I bring my children?',
@@ -303,9 +314,10 @@ export interface ColourSwatch {
 }
 
 export const colourOfTheDay: ColourSwatch[] = [
-  { name: 'Champagne Gold', hex: '#bfa05a' },
-  { name: 'Ivory', hex: '#f3ebdc' },
-  { name: 'Burgundy', hex: '#6e1423' },
+  { name: 'Burnt Orange', hex: '#bf531a' },
+  { name: 'Chocolate Brown', hex: '#74502e' },
+  { name: 'Beige', hex: '#d6b78c' },
+  { name: 'Wine', hex: '#6e1a22' },
 ]
 
 /* ============================================================
