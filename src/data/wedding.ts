@@ -36,7 +36,7 @@ export interface TimelineEvent {
 export const storyTimeline: TimelineEvent[] = [
   {
     year: 'The Meeting',
-    title: 'Strangers at Revival Hub',
+    title: 'Brethren at Revival Hub',
     text: 'We crossed paths at Revival Hub International Headquarters — two strangers united by one faith.',
   },
   {

@@ -1,11 +1,11 @@
-import { useState } from 'react'
 import { weddingEvents } from '../data/wedding'
 import { downloadIcs, googleCalendarUrl } from '../utils/calendar'
 import './WeddingDetails.css'
 
 export default function WeddingDetails() {
-  const [activeMap, setActiveMap] = useState(0)
-  const active = weddingEvents[activeMap]
+  // The map focuses on the White Wedding venue only.
+  const mapEvent =
+    weddingEvents.find((ev) => ev.name === 'White Wedding') ?? weddingEvents[0]
 
   return (
     <section id="details" className="section section--tint">
@@ -21,11 +21,7 @@ export default function WeddingDetails() {
 
         <div className="events__grid">
           {weddingEvents.map((ev, i) => (
-            <article
-              className={`event${i === activeMap ? ' event--active' : ''}`}
-              key={ev.name}
-              onClick={() => setActiveMap(i)}
-            >
+            <article className="event" key={ev.name}>
               <span className="event__order">{String(i + 1).padStart(2, '0')}</span>
               <h3>{ev.name}</h3>
               <p className="event__date">{ev.date}</p>
@@ -34,18 +30,8 @@ export default function WeddingDetails() {
                 <strong>{ev.venue}</strong>
                 <span>{ev.address}</span>
               </div>
-              <button
-                className="event__map-link"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setActiveMap(i)
-                  document.getElementById('venue-map')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                }}
-              >
-                View on map →
-              </button>
 
-              <div className="event__cal" onClick={(e) => e.stopPropagation()}>
+              <div className="event__cal">
                 <span className="event__cal-label">Add to calendar</span>
                 <div className="event__cal-btns">
                   <a
@@ -67,11 +53,11 @@ export default function WeddingDetails() {
 
         <div id="venue-map" className="map reveal">
           <div className="map__caption">
-            <span>📍</span> {active.venue} — {active.address}
+            <span>📍</span> {mapEvent.venue} — {mapEvent.address}
           </div>
           <iframe
-            title={`Map of ${active.venue}`}
-            src={`https://www.google.com/maps?q=${encodeURIComponent(active.mapQuery)}&output=embed`}
+            title={`Map of ${mapEvent.venue}`}
+            src={`https://www.google.com/maps?q=${encodeURIComponent(mapEvent.mapQuery)}&output=embed`}
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
             allowFullScreen
