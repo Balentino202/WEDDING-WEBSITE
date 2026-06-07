@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { couple, rsvpEndpoint } from '../data/wedding'
+import { db, firebaseEnabled } from '../lib/firebase'
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore'
 import './RSVP.css'
 
 type Attendance = 'pending' | 'yes' | 'no' | 'maybe'
@@ -76,6 +78,32 @@ export default function RSVP() {
       /* ignore storage errors */
     }
 
+    // Save to the shared Firestore guest list so the couple can see it from
+    // anywhere on the password-protected /admin page.
+    if (firebaseEnabled && db) {
+      setSending(true)
+      setSendError('')
+      try {
+        await addDoc(collection(db, 'rsvps'), {
+          name: form.name.trim(),
+          email: form.email.trim(),
+          attending: form.attending,
+          guests: form.attending === 'yes' || form.attending === 'maybe' ? form.guests : '—',
+          events: form.events.join(', '),
+          message: form.message.trim(),
+          submittedAt: payload.submittedAt,
+          createdAt: serverTimestamp(),
+        })
+      } catch {
+        setSending(false)
+        setSendError(
+          'We couldn’t reach the server, but your response was saved. Please try again later.',
+        )
+        return
+      }
+      setSending(false)
+    }
+
     // If a Formspree endpoint is configured, send it there too.
     if (rsvpEndpoint) {
       setSending(true)
@@ -103,7 +131,7 @@ export default function RSVP() {
   if (submitted) {
     return (
       <section id="rsvp" className="section section--tint">
-        <div className="container rsvp__thanks reveal">
+        <div className="container rsvp__thanks">
           <div className="rsvp__thanks-icon">💌</div>
           <h2>Thank You, {form.name.split(' ')[0]}!</h2>
           <p>

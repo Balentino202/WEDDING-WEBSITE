@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react'
 import { useScrollReveal } from './hooks/useScrollReveal'
+import Admin from './components/Admin'
 import Preloader from './components/Preloader'
 import Petals from './components/Petals'
 import Navbar from './components/Navbar'
@@ -17,8 +19,24 @@ import RSVP from './components/RSVP'
 import Footer from './components/Footer'
 import BackToTop from './components/BackToTop'
 
+function usePathRoute() {
+  const [path, setPath] = useState(() => window.location.pathname)
+  useEffect(() => {
+    const onPop = () => setPath(window.location.pathname)
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
+  return path
+}
+
 export default function App() {
   useScrollReveal()
+  const path = usePathRoute()
+
+  // Hidden, password-protected admin area for the couple: yoursite.com/admin
+  if (path.replace(/\/+$/, '').endsWith('/admin')) {
+    return <Admin />
+  }
 
   return (
     <>

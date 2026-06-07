@@ -1,4 +1,13 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { db, firebaseEnabled } from '../lib/firebase'
+import {
+  addDoc,
+  collection,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+} from 'firebase/firestore'
 import './Guestbook.css'
 
 interface Wish {
@@ -22,7 +31,7 @@ const seed: Wish[] = [
   },
 ]
 
-function load(): Wish[] {
+function loadLocal(): Wish[] {
   try {
     const stored = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || 'null')
     if (Array.isArray(stored)) return stored
@@ -44,12 +53,29 @@ function timeAgo(iso: string): string {
 const palette = ['#bfa05a', '#6e1423', '#7a6f57', '#9c813f', '#4a5d4e', '#8a5a44']
 
 export default function Guestbook() {
-  const [wishes, setWishes] = useState<Wish[]>(load)
+  const [wishes, setWishes] = useState<Wish[]>(() => (firebaseEnabled ? [] : loadLocal()))
   const [name, setName] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [sending, setSending] = useState(false)
 
+  // Live wall from Firebase (shared across everyone) when connected…
   useEffect(() => {
+    if (!firebaseEnabled || !db) return
+    const q = query(collection(db, 'guestbook'), orderBy('createdAt', 'desc'))
+    return onSnapshot(q, (snap) => {
+      setWishes(
+        snap.docs.map((d) => {
+          const data = d.data() as { name: string; message: string; at?: string }
+          return { name: data.name, message: data.message, at: data.at || '' }
+        }),
+      )
+    })
+  }, [])
+
+  // …otherwise keep the local browser copy in sync.
+  useEffect(() => {
+    if (firebaseEnabled) return
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(wishes))
     } catch {
@@ -57,17 +83,34 @@ export default function Guestbook() {
     }
   }, [wishes])
 
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault()
     if (!name.trim() || !message.trim()) {
       setError('Please add both your name and a message.')
       return
     }
     setError('')
-    setWishes((prev) => [
-      { name: name.trim(), message: message.trim(), at: new Date().toISOString() },
-      ...prev,
-    ])
+    const wish: Wish = {
+      name: name.trim(),
+      message: message.trim(),
+      at: new Date().toISOString(),
+    }
+
+    if (firebaseEnabled && db) {
+      setSending(true)
+      try {
+        await addDoc(collection(db, 'guestbook'), { ...wish, createdAt: serverTimestamp() })
+      } catch {
+        setError('Sorry, your message couldn’t be posted. Please try again.')
+        setSending(false)
+        return
+      }
+      setSending(false)
+      // The live subscription will add it to the wall automatically.
+    } else {
+      setWishes((prev) => [wish, ...prev])
+    }
+
     setName('')
     setMessage('')
   }
@@ -102,8 +145,8 @@ export default function Guestbook() {
             aria-label="Your message"
           />
           {error && <span className="guestbook__error">{error}</span>}
-          <button type="submit" className="btn">
-            Post Your Wish
+          <button type="submit" className="btn" disabled={sending}>
+            {sending ? 'Posting…' : 'Post Your Wish'}
           </button>
         </form>
 
@@ -120,18 +163,13 @@ export default function Guestbook() {
                 </span>
                 <div>
                   <strong className="wish__name">{w.name}</strong>
-                  <span className="wish__time">{timeAgo(w.at)}</span>
+                  <span className="wish__time">{w.at ? timeAgo(w.at) : ''}</span>
                 </div>
               </div>
               <p className="wish__msg">{w.message}</p>
             </article>
           ))}
         </div>
-
-        <p className="guestbook__note reveal">
-          Messages are saved in your browser. To collect them centrally, connect a backend
-          (e.g. Firebase or a Google Sheet) — see the README.
-        </p>
       </div>
     </section>
   )

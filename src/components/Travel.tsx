@@ -45,8 +45,7 @@ export default function Travel() {
 
         <p className="travel__note reveal">
           ✈️ Flying in? The nearest airports are <strong>Asaba (ABB)</strong> and{' '}
-          <strong>Enugu (ENU)</strong>, each about 1–1.5 hours from Nnewi by road. Hotel names and
-          numbers above are samples — update them in <code>src/data/wedding.ts</code>.
+          <strong>Enugu (ENU)</strong>, each about 1–1.5 hours from Nnewi by road.
         </p>
       </div>
     </section>
