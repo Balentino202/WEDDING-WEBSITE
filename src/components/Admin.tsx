@@ -38,6 +38,7 @@ interface Wish {
 type Filter = 'all' | 'yes' | 'no' | 'maybe' | 'pending' | 'followup'
 type Tab = 'rsvps' | 'wishes'
 type SortKey = 'name' | 'date' | 'guests'
+type Audience = 'all' | 'yes' | 'maybe' | 'pending' | 'no'
 
 const filterLabels: Record<Filter, string> = {
   all: 'All',
@@ -46,6 +47,14 @@ const filterLabels: Record<Filter, string> = {
   no: 'No',
   pending: 'Pending',
   followup: '🔔 Needs follow-up',
+}
+
+const audienceLabels: Record<Audience, string> = {
+  all: 'Everyone',
+  yes: '✅ Yes',
+  maybe: '🤔 Maybe',
+  pending: '⏳ Pending',
+  no: '❌ No',
 }
 
 const attendBadge: Record<string, string> = {
@@ -72,6 +81,14 @@ export default function Admin() {
   const [sortKey, setSortKey] = useState<SortKey>('date')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [synced, setSynced] = useState(false)
+
+  // Bulk-email compose panel.
+  const [composeOpen, setComposeOpen] = useState(false)
+  const [audience, setAudience] = useState<Audience>('all')
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [subject, setSubject] = useState('')
+  const [body, setBody] = useState('')
+  const [copied, setCopied] = useState<'' | 'emails' | 'message'>('')
 
   // Track whether someone is logged in.
   useEffect(() => {
@@ -195,18 +212,74 @@ export default function Admin() {
   const sortArrow = (key: SortKey) =>
     sortKey === key ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ''
 
-  // Open the mail app with all confirmed (Yes) guests on BCC.
-  const emailAttendees = () => {
-    const emails = rsvps
-      .filter((r) => r.attending === 'yes' && r.email)
-      .map((r) => r.email)
+  // Every guest who left an email address.
+  const emailRows = useMemo(() => rsvps.filter((r) => r.email), [rsvps])
+
+  // The ones currently ticked = who the email will go to.
+  const recipients = useMemo(
+    () => emailRows.filter((r) => selectedIds.has(r.id)),
+    [emailRows, selectedIds],
+  )
+
+  const idsFor = (a: Audience) =>
+    new Set(
+      emailRows.filter((r) => a === 'all' || r.attending === a).map((r) => r.id),
+    )
+
+  const openCompose = () => {
+    setSubject(`${couple.brideFirstName} & ${couple.groomFirstName} — Wedding Update`)
+    setAudience('all')
+    setSelectedIds(idsFor('all')) // everyone ticked to start; untick anyone to skip
+    setCopied('')
+    setComposeOpen(true)
+  }
+
+  // Quick presets — re-tick a whole group at once.
+  const applyAudience = (a: Audience) => {
+    setAudience(a)
+    setSelectedIds(idsFor(a))
+  }
+
+  // Tick / untick one guest.
+  const toggleRecipient = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  // Open the mail app with the whole audience on BCC + subject/message prefilled.
+  const sendCompose = () => {
+    const emails = [...new Set(recipients.map((r) => r.email))]
     if (!emails.length) {
-      window.alert('No guests have confirmed “Yes” yet.')
+      window.alert('No guests in this group have an email address yet.')
       return
     }
-    const subject = encodeURIComponent(`${couple.brideFirstName} & ${couple.groomFirstName} — Wedding Update`)
-    window.location.href = `mailto:?bcc=${emails.join(',')}&subject=${subject}`
+    // Build the mailto by hand: mail apps expect %20 for spaces (encodeURIComponent),
+    // not the "+" that URLSearchParams produces.
+    const parts = [`bcc=${encodeURIComponent(emails.join(','))}`]
+    if (subject) parts.push(`subject=${encodeURIComponent(subject)}`)
+    if (body) parts.push(`body=${encodeURIComponent(body)}`)
+    window.location.href = `mailto:?${parts.join('&')}`
   }
+
+  const copyText = async (text: string, which: 'emails' | 'message') => {
+    if (!text) return
+    try {
+      await navigator.clipboard.writeText(text)
+    } catch {
+      window.prompt('Copy this:', text)
+      return
+    }
+    setCopied(which)
+    window.setTimeout(() => setCopied(''), 2000)
+  }
+
+  const copyEmails = () =>
+    copyText([...new Set(recipients.map((r) => r.email))].join(', '), 'emails')
+  const copyMessage = () => copyText(body, 'message')
 
   const printList = () => window.print()
 
@@ -417,8 +490,8 @@ export default function Admin() {
             ))}
           </div>
           <div className="admin__tools-right">
-            <button className="admin__export" onClick={emailAttendees} disabled={!rsvps.length}>
-              📧 Email “Yes” guests
+            <button className="admin__export" onClick={openCompose} disabled={!rsvps.length}>
+              📧 Email guests
             </button>
             <button className="admin__export" onClick={printList} disabled={!rsvps.length}>
               🖨️ Print
@@ -519,6 +592,120 @@ export default function Admin() {
           )
         )}
       </div>
+
+      {composeOpen && (
+        <div className="admin__modal" role="dialog" aria-modal="true">
+          <div className="admin__modal-backdrop" onClick={() => setComposeOpen(false)} />
+          <div className="admin__compose">
+            <div className="admin__compose-head">
+              <h2>📧 Email guests</h2>
+              <button
+                className="admin__del"
+                onClick={() => setComposeOpen(false)}
+                title="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            <span className="admin__compose-label">Quick select</span>
+            <div className="admin__filters">
+              {(['all', 'yes', 'maybe', 'pending', 'no'] as Audience[]).map((a) => (
+                <button
+                  key={a}
+                  className={`admin__filter${audience === a ? ' is-active' : ''}`}
+                  onClick={() => applyAudience(a)}
+                >
+                  {audienceLabels[a]}
+                </button>
+              ))}
+            </div>
+
+            <div className="admin__compose-listhead">
+              <span className="admin__compose-label" style={{ margin: 0 }}>
+                Recipients — untick anyone you don’t want
+              </span>
+              <span className="admin__compose-count">
+                <strong>{recipients.length}</strong> / {emailRows.length} selected
+              </span>
+            </div>
+
+            {emailRows.length === 0 ? (
+              <p className="admin__compose-count">
+                No guests have left an email address yet.
+              </p>
+            ) : (
+              <ul className="admin__recipients">
+                {emailRows.map((r) => (
+                  <li key={r.id} className="admin__recipient">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(r.id)}
+                        onChange={() => toggleRecipient(r.id)}
+                      />
+                      <span className="admin__recipient-name">{r.name}</span>
+                      <span className="admin__recipient-email">{r.email}</span>
+                      <span className={`badge ${attendBadge[r.attending] || ''}`}>
+                        {r.attending}
+                      </span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {recipients.length > 90 && (
+              <p className="admin__compose-count admin__compose-warn">
+                Most mail apps cap ~100 BCC per send — untick some, or use “Copy
+                addresses” to send in batches.
+              </p>
+            )}
+
+            <label className="admin__compose-label" htmlFor="compose-subject">
+              Subject
+            </label>
+            <input
+              id="compose-subject"
+              className="admin__search"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+            />
+
+            <label className="admin__compose-label" htmlFor="compose-body">
+              Message
+            </label>
+            <textarea
+              id="compose-body"
+              className="admin__compose-body"
+              rows={8}
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              placeholder="Write your message to guests…"
+            />
+
+            <div className="admin__compose-actions">
+              <button className="btn" onClick={sendCompose} disabled={!recipients.length}>
+                Open in mail app →
+              </button>
+              <button
+                className="admin__export"
+                onClick={copyEmails}
+                disabled={!recipients.length}
+              >
+                {copied === 'emails' ? '✓ Copied' : 'Copy addresses'}
+              </button>
+              <button className="admin__export" onClick={copyMessage} disabled={!body}>
+                {copied === 'message' ? '✓ Copied' : 'Copy message'}
+              </button>
+            </div>
+            <p className="admin__compose-hint">
+              Guests are added on <strong>BCC</strong>, so no one sees anyone else’s
+              address.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

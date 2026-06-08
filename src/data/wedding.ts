@@ -37,7 +37,7 @@ export const storyTimeline: TimelineEvent[] = [
   {
     year: 'The Meeting',
     title: 'Brethren at Revival Hub',
-    text: 'We crossed paths at Revival Hub International Headquarters — two brethren united by one faith.',
+    text: 'We crossed paths at Revival Hub International Headquarters — Two hearts united by one faith.',
   },
   {
     year: 'The Friendship',
